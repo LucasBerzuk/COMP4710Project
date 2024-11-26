@@ -1,0 +1,62 @@
+---
+title: "COMP 4710 Project"
+author: "Lucas Berzuk"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Import data
+crimeData = read.csv("CrimeByNeighborhood.csv")
+censusData = read.csv("CensusNeighbourhoods.csv")
+crimeDf = data.frame(crimeData)
+censusDf = data.frame(censusData)
+```
+
+```{r}
+# Merged into one dataset
+allData <- merge(crimeDf, censusDf, by = "Name", all = TRUE)
+```
+
+```{r}
+### Create a testing dataframe
+testData <- data.frame(matrix(ncol = 0, nrow = nrow(allData)))
+### -----------------------------------------------------------
+
+
+### Create a Violent and Non-Violent variable to test factors against
+testData$Is.Violent <- allData$Crime.Category == "Violent Crime"
+testData$Is.NonViolent <- allData$Crime.Category == "Non-Violent Crime"
+### --------------------------------------------------------------------
+```
+
+```{r}
+# Find the percentage of people in LICO.AT based on that areas Pop.
+percentOfPplInLICO <- allData$LICO.AT/allData$Pop.
+# Find the mean % of ppl in LICO
+meanLICO = mean(percentOfPplInLICO, na.rm = TRUE)
+# Create a column for it
+testData$PercPPLinLICOAboveMean <- percentOfPplInLICO > meanLICO
+
+# Compute the correlation
+correlation <- cor(testData$Is.Violent, testData$PercPPLinLICOAboveMean, use = "complete.obs")
+print(correlation)
+
+
+
+
+# Try this with % of unemployed ppl based on total people in labour force
+percPplUnemployedButInLabForce = ifelse(allData$Unemployed == 0, NA, allData$Unemployed / (allData$Employed + allData$Unemployed))
+# Find mean
+meanUnemp = mean(percPplUnemployedButInLabForce, na.rm = TRUE)
+# Create column
+testData$percPplUnemployedButInLabForceAboveMean <- percPplUnemployedButInLabForce > meanUnemp
+
+# Compute the correlation
+correlation <- cor(testData$Is.Violent, testData$percPplUnemployedButInLabForceAboveMean, use = "complete.obs")
+print(correlation)
+```
