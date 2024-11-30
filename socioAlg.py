@@ -97,7 +97,7 @@ data_computed[all_computed_indicators] = CensusData[all_computed_indicators]
 # Merge data into one dataset on Name, eliminate other CrimeData columns because pointless
 merged_data = pd.merge(data_computed, CrimeData[['Name', 'Crime Category']], on='Name', how='inner')
 
-name_counts = CrimeData['Name'].value_counts()
+name_counts = merged_data['Name'].value_counts()
 pd.set_option('display.max_rows', None)
 print(name_counts)
 print(len(name_counts))
