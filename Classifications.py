@@ -5,7 +5,7 @@ import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
-RANDOM_STATE = 4710
+RANDOM_STATE = 184
 
 # create pickel files to load data quickly
 try:
@@ -118,10 +118,11 @@ data_computed['Crime Rate'] = data_computed['Crime Count'].apply(categorize_crim
 
 # Set features
 features = [
-  'High School Diploma Ratio', 'Post Secondary Ratio', 'Employed Ratio',
-  'Avg. Income', 'Household Income Ratio', 'Ownership Ratio', 'Pop. Density (per km^2)', 
-  'Indigenous Ratio', 'Minority Ratio', 'Immigrant Ratio', 
-  'No Certification Ratio', 'LICO Ratio', 'Male Ratio', 'Female Ratio'
+   'No Certification Ratio', 'Minority Ratio','Employed Ratio','Pop. Density (per km^2)','Avg. Income','Ownership Ratio'
+#   'High School Diploma Ratio', 'Post Secondary Ratio', 'Employed Ratio',
+#   'Avg. Income', 'Household Income Ratio', 'Ownership Ratio', 'Pop. Density (per km^2)', 
+#   'Indigenous Ratio', 'Minority Ratio', 'Immigrant Ratio', 
+#   'No Certification Ratio', 'LICO Ratio', 'Male Ratio', 'Female Ratio'
 ]
 
 # Now set the target variable to the new binary category
@@ -157,6 +158,28 @@ X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)  # Resample 
 # Ensure the resampled data is still in DataFrame format to avoid issues with model predictions
 X_train_smote = pd.DataFrame(X_train_smote, columns=features)
 
+# -----------------------------------------RF------------------------------------
+from sklearn.ensemble import RandomForestClassifier
+
+RF_model = RandomForestClassifier(n_estimators = 100,
+                                  criterion= 'gini',
+                                  max_depth = None,
+                                  min_samples_split = 2,
+                                  min_samples_leaf = 1,
+                                  min_weight_fraction_leaf = 0,
+                                  max_features = "sqrt",
+                                  max_leaf_nodes = None,
+                                  min_impurity_decrease = 0,
+                                  bootstrap = True,
+                                  oob_score = False,
+                                  random_state=RANDOM_STATE, 
+                                  class_weight='balanced')
+RF_model.fit(X_train_smote, y_train_smote)
+
+RF_pred = RF_model.predict(X_test)
+print("RF Result")
+print(classification_report(y_test, RF_pred, zero_division=0))
+
 # --------------------------------------MLP-NN-------------------------------------
 # from sklearn.neural_network import MLPClassifier
 
@@ -170,16 +193,6 @@ X_train_smote = pd.DataFrame(X_train_smote, columns=features)
 # MLP_pred = MLP_model.predict(X_test)
 # print("MLP Result")
 # print(classification_report(y_test, MLP_pred, zero_division=0))
-
-# -----------------------------------------RF------------------------------------
-from sklearn.ensemble import RandomForestClassifier
-
-RF_model = RandomForestClassifier(random_state=RANDOM_STATE, class_weight='balanced')
-RF_model.fit(X_train, y_train)
-
-RF_pred = RF_model.predict(X_test)
-print("RF Result")
-print(classification_report(y_test, RF_pred, zero_division=0))
 
 # ---------------------------------------K-NN-----------------------------------------
 # from sklearn.neighbors import KNeighborsClassifier
