@@ -256,3 +256,71 @@ print(classification_report(y_test, RF_pred, zero_division=0))
 # svc_pred = svc_model.predict(X_test_scaled)
 # print("SVC Result")
 # print(classification_report(y_test, svc_pred, zero_division=0))
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.decomposition import PCA
+
+# Plot feature importance
+def plot_feature_importance(model, feature_names):
+    importance = model.feature_importances_
+    sorted_idx = importance.argsort()
+    plt.figure(figsize=(10, 6))
+    plt.barh(range(len(sorted_idx)), importance[sorted_idx], align="center")
+    plt.yticks(range(len(sorted_idx)), [feature_names[i] for i in sorted_idx])
+    plt.title("Feature Importance")
+    plt.show()
+
+plot_feature_importance(RF_model, features)
+
+# Confusion Matrix
+def plot_confusion_matrix(y_true, y_pred, labels):
+    cm = confusion_matrix(y_true, y_pred, labels=labels)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+    disp.plot(cmap="Blues", values_format="d")
+    plt.title("Confusion Matrix")
+    plt.show()
+
+plot_confusion_matrix(y_test, RF_pred, labels=RF_model.classes_)
+
+# Visualizing Clusters with PCA
+def plot_pca(X, y, title="PCA of Socioeconomic Features"):
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X)
+    plt.figure(figsize=(10, 8))
+    sns.scatterplot(
+        x=X_pca[:, 0],
+        y=X_pca[:, 1],
+        hue=y,
+        palette="viridis",
+        s=50,
+        alpha=0.8
+    )
+    plt.title(title)
+    plt.xlabel("PCA Component 1")
+    plt.ylabel("PCA Component 2")
+    plt.legend(title="Crime Rate")
+    plt.grid()
+    plt.show()
+
+plot_pca(X_test_scaled, y_test, title="PCA of Testing Data (Post-Scaling)")
+
+# Precision, Recall, and F1 Scores per Class
+def plot_classification_report(report):
+    report_data = []
+    for label, metrics in report.items():
+        if isinstance(metrics, dict):
+            report_data.append({"class": label, **metrics})
+    df_report = pd.DataFrame(report_data)
+    df_report.set_index("class", inplace=True)
+    df_report[["precision", "recall", "f1-score"]].plot(kind="bar", figsize=(10, 6), cmap="viridis")
+    plt.title("Classification Report Metrics")
+    plt.ylabel("Score")
+    plt.xticks(rotation=45)
+    plt.grid(axis="y")
+    plt.show()
+
+# Convert classification report to dict and plot
+report_dict = classification_report(y_test, RF_pred, output_dict=True, zero_division=0)
+plot_classification_report(report_dict)
