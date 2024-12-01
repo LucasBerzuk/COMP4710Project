@@ -94,33 +94,42 @@ data_computed[all_computed_indicators] = CensusData[all_computed_indicators]
 # Classification Testing
 # ---------------------------
 
-# Merge data into one dataset on Name, eliminate other CrimeData columns because pointless
-merged_data = pd.merge(data_computed, CrimeData[['Name', 'Crime Category']], on='Name', how='inner')
+# Count crimes per neighborhood
+crime_count = CrimeData.groupby('Name').size().reset_index(name='Crime Count')
 
-name_counts = merged_data['Name'].value_counts()
-pd.set_option('display.max_rows', None)
-print(name_counts)
-print(len(name_counts))
+# Merge crime count with the census data
+data_computed = pd.merge(CensusData, crime_count, left_on='Name', right_on='Name', how='left')
+
+# Handle missing values and preprocess the data
+# Fill missing crime counts with 0 for neighborhoods with no reported crime
+data_computed['Crime Count'] = data_computed['Crime Count'].fillna(0)
+
+# Add a new column 'Crime Rate' based on the crime count
+def categorize_crime_rate(count):
+    if count <= 99:
+        return 'Low'
+    elif count <= 299:
+        return 'Mid'
+    else:
+        return 'High'
+
+# Apply the function to create the 'Crime Rate' column
+data_computed['Crime Rate'] = data_computed['Crime Count'].apply(categorize_crime_rate)
 
 # Set features
 features = [
-  'Pop. Density (per km^2)', 'Ownership Ratio', 'No Certification Ratio', 'Minority Ratio', 'Avg. Income', 'Employed Ratio'
-  # 'High School Diploma Ratio', 'Post Secondary Ratio', 'Employed Ratio',
-  # 'Avg. Income', 'Household Income Ratio', 'Ownership Ratio', 'Pop. Density (per km^2)', 
-  # 'Indigenous Ratio', 'Minority Ratio', 'Immigrant Ratio', 
-  # 'No Certification Ratio', 'LICO Ratio', 'Male Ratio', 'Female Ratio'
+  'High School Diploma Ratio', 'Post Secondary Ratio', 'Employed Ratio',
+  'Avg. Income', 'Household Income Ratio', 'Ownership Ratio', 'Pop. Density (per km^2)', 
+  'Indigenous Ratio', 'Minority Ratio', 'Immigrant Ratio', 
+  'No Certification Ratio', 'LICO Ratio', 'Male Ratio', 'Female Ratio'
 ]
 
-# Map the 'Crime Category' to 'Violent Crime' and 'Non-Violent Crime'
-merged_data['Binary_Crime_Category'] = merged_data['Crime Category'].apply(
-   lambda x: 'Violent Crime' if x in ['Violent Crime', 'Other Violent Crime'] else 'Non-Violent Crime')
-
 # Now set the target variable to the new binary category
-target = 'Binary_Crime_Category'
+target = 'Crime Rate'
 
 # Split the data into features and target
-X = merged_data[features] 
-y = merged_data[target]  
+X = data_computed[features] 
+y = data_computed[target]  
 
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = RANDOM_STATE)
@@ -148,7 +157,7 @@ X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)  # Resample 
 # Ensure the resampled data is still in DataFrame format to avoid issues with model predictions
 X_train_smote = pd.DataFrame(X_train_smote, columns=features)
 
-# # --------------------------------------MLP-NN-------------------------------------
+# --------------------------------------MLP-NN-------------------------------------
 # from sklearn.neural_network import MLPClassifier
 
 # MLP_model = MLPClassifier(hidden_layer_sizes=(100,100),  # One hidden layer with 100 neurons
@@ -163,77 +172,29 @@ X_train_smote = pd.DataFrame(X_train_smote, columns=features)
 # print(classification_report(y_test, MLP_pred, zero_division=0))
 
 # -----------------------------------------RF------------------------------------
-# from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier
 
-# RF_model = RandomForestClassifier(random_state=RANDOM_STATE, class_weight='balanced')
-# RF_model.fit(X_train, y_train)
+RF_model = RandomForestClassifier(random_state=RANDOM_STATE, class_weight='balanced')
+RF_model.fit(X_train, y_train)
 
-# RF_pred = RF_model.predict(X_test)
-# print("RF Result")
-# print(classification_report(y_test, RF_pred, zero_division=0))
+RF_pred = RF_model.predict(X_test)
+print("RF Result")
+print(classification_report(y_test, RF_pred, zero_division=0))
 
-# from sklearn.metrics import classification_report, confusion_matrix, precision_recall_curve, roc_curve
-
-# # Get predicted probabilities for both classes
-# RF_probs = RF_model.predict_proba(X_test)[:, 1]  # Probabilities for the positive class (Violent Crime)
-
-# # Define a custom threshold
-# threshold = 0.25  # Lower threshold to favor Violent Crimes
-
-# # Generate predictions based on the threshold
-# RF_custom_pred = (RF_probs >= threshold).astype(int)
-
-# # Convert class labels for evaluation
-# y_test_binary = (y_test == 'Violent Crime').astype(int)  # Convert labels to binary (0 for Non-Violent, 1 for Violent)
-
-# # Evaluate the model
-# print("Classification Report (Threshold = {:.2f})".format(threshold))
-# print(classification_report(y_test_binary, RF_custom_pred, zero_division=0))
-
-# # Confusion Matrix
-# conf_matrix = confusion_matrix(y_test_binary, RF_custom_pred)
-# print("Confusion Matrix:")
-# print(conf_matrix)
-
-# # Plot Precision-Recall Curve
-# precision, recall, _ = precision_recall_curve(y_test_binary, RF_probs)
-# import matplotlib.pyplot as plt
-
-# plt.figure(figsize=(8, 6))
-# plt.plot(recall, precision, marker='.', label="Random Forest")
-# plt.title("Precision-Recall Curve")
-# plt.xlabel("Recall")
-# plt.ylabel("Precision")
-# plt.legend()
-# plt.grid()
-# plt.show()
-
-# # Plot ROC Curve
-# fpr, tpr, _ = roc_curve(y_test_binary, RF_probs)
-# plt.figure(figsize=(8, 6))
-# plt.plot(fpr, tpr, marker='.', label="Random Forest")
-# plt.title("ROC Curve")
-# plt.xlabel("False Positive Rate")
-# plt.ylabel("True Positive Rate")
-# plt.legend()
-# plt.grid()
-# plt.show()
-
-
-# # ---------------------------------------K-NN-----------------------------------------
+# ---------------------------------------K-NN-----------------------------------------
 # from sklearn.neighbors import KNeighborsClassifier
 
 # KNN_model = KNeighborsClassifier(n_neighbors=5,  # Number of neighbors (k)
 #                                  metric='minkowski',  # Distance metric (Minkowski is the default)
 #                                  p=2,                 # p=2 corresponds to Euclidean distance
 #                                  n_jobs=-1)           # Use all processors
-# KNN_model.fit(X_train_smote, y_train_smote)
+# KNN_model.fit(X_train, y_train)
 
-# KNN_pred = KNN_model.predict(X_test_scaled)
+# KNN_pred = KNN_model.predict(X_test)
 # print("KNN Result")
 # print(classification_report(y_test, KNN_pred, zero_division=0))
 
-# # --------------------------------------DT------------------------------------------
+# --------------------------------------DT------------------------------------------
 # from sklearn.tree import DecisionTreeClassifier
 
 # dt_model = DecisionTreeClassifier(random_state=RANDOM_STATE,
@@ -241,9 +202,9 @@ X_train_smote = pd.DataFrame(X_train_smote, columns=features)
 #                                   max_depth=5,        # Limit the depth of the tree to prevent overfitting
 #                                   min_samples_split=10, # Minimum samples required to split a node
 #                                   min_samples_leaf=5, class_weight='balanced')  # Minimum samples required to be at a leaf node
-# dt_model.fit(X_train_smote, y_train_smote)
+# dt_model.fit(X_train, y_train)
 
-# dt_pred = dt_model.predict(X_test_scaled)
+# dt_pred = dt_model.predict(X_test)
 # print("DT Result")
 # print(classification_report(y_test, dt_pred, zero_division=0))
 
