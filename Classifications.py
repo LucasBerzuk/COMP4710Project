@@ -158,7 +158,17 @@ X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)  # Resample 
 # Ensure the resampled data is still in DataFrame format to avoid issues with model predictions
 X_train_smote = pd.DataFrame(X_train_smote, columns=features)
 
-# -----------------------------------------RF------------------------------------
+# Dictionary to store results
+model_results = {}
+
+# Define a function to train, predict, and store results
+def evaluate_model(model, model_name, X_train, y_train, X_test, y_test):
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+    report = classification_report(y_test, predictions, zero_division=0, output_dict=True)
+    model_results[model_name] = report
+
+# -----------------------------------------RF------------------------------------ Optimal solution so far
 from sklearn.ensemble import RandomForestClassifier
 
 RF_model = RandomForestClassifier(n_estimators = 1000,
@@ -173,154 +183,294 @@ RF_model = RandomForestClassifier(n_estimators = 1000,
                                   bootstrap = True,
                                   oob_score = False,
                                   random_state=RANDOM_STATE, 
-                                  class_weight='balanced')
-RF_model.fit(X_train_smote, y_train_smote)
+                                  class_weight='balanced',
+                                  n_jobs = None,
+                                  verbose = 0,
+                                  warm_start = False,
+                                  ccp_alpha = 0,
+                                  max_samples = None)
+evaluate_model(RF_model, "Random Forest", X_train, y_train, X_test, y_test)
+# RF_model.fit(X_train, y_train)
 
-RF_pred = RF_model.predict(X_test)
-print("RF Result")
-print(classification_report(y_test, RF_pred, zero_division=0))
+# RF_pred = RF_model.predict(X_test)
+# print("RF Result")
+# print(classification_report(y_test, RF_pred, zero_division=0))
 
-# --------------------------------------MLP-NN-------------------------------------
-# from sklearn.neural_network import MLPClassifier
+# --------------------------------------MLP-NN-------------------------------------Optimal so far
+from sklearn.neural_network import MLPClassifier
 
-# MLP_model = MLPClassifier(hidden_layer_sizes=(100,100),  # One hidden layer with 100 neurons
-#                           solver='adam',             # Optimizer (Adam)
-#                           activation='relu',         # ReLU activation function
-#                           max_iter=1500,             # Number of iterations for training
-#                           random_state=RANDOM_STATE, alpha = 0.0383) # Random state for reproducibility
-# MLP_model.fit(X_train, y_train)
+MLP_model = MLPClassifier(hidden_layer_sizes=(100,100),  # One hidden layer with 100 neurons
+                          solver='adam',             # Optimizer (Adam)
+                          activation='relu',         # ReLU activation function
+                          max_iter=1500,             # Number of iterations for training
+                          random_state=RANDOM_STATE, 
+                          alpha = 0.0383,
+                          batch_size = "auto",
+                          learning_rate = "constant",
+                          learning_rate_init = 0.001,
+                          power_t = 0.5,
+                          shuffle = True,
+                          tol = 0.0001,
+                          verbose = False,
+                          warm_start = False,
+                          momentum = 0.9,
+                          nesterovs_momentum = True,
+                          early_stopping = False,
+                          validation_fraction = 0.1,
+                          beta_1 = 0.9,
+                          beta_2 = 0.999,
+                          epsilon = 0.00000001,
+                          n_iter_no_change = 10,
+                          max_fun = 15000)
+evaluate_model(MLP_model, "MLP Neural Network", X_train_smote, y_train_smote, X_test, y_test)
+
+# MLP_model.fit(X_train_smote, y_train_smote)
 
 # MLP_pred = MLP_model.predict(X_test)
 # print("MLP Result")
 # print(classification_report(y_test, MLP_pred, zero_division=0))
 
-# ---------------------------------------K-NN-----------------------------------------
-# from sklearn.neighbors import KNeighborsClassifier
+# ---------------------------------------K-NN-----------------------------------------Optimal so far
+from sklearn.neighbors import KNeighborsClassifier
 
-# KNN_model = KNeighborsClassifier(n_neighbors=5,  # Number of neighbors (k)
-#                                  metric='minkowski',  # Distance metric (Minkowski is the default)
-#                                  p=2,                 # p=2 corresponds to Euclidean distance
-#                                  n_jobs=-1)           # Use all processors
-# KNN_model.fit(X_train, y_train)
+KNN_model = KNeighborsClassifier(n_neighbors=3,  # Number of neighbors (k)
+                                 metric='minkowski',  # Distance metric (Minkowski is the default)
+                                 p=3,                 # p=2 corresponds to Euclidean distance
+                                 n_jobs=None,
+                                 weights = "uniform",
+                                 algorithm = "auto",
+                                 leaf_size = 30,
+                                 metric_params = None)
+evaluate_model(KNN_model, "K-Nearest Neighbors", X_train_scaled, y_train, X_test_scaled, y_test)
 
-# KNN_pred = KNN_model.predict(X_test)
+# KNN_model.fit(X_train_scaled, y_train)
+
+# KNN_pred = KNN_model.predict(X_test_scaled)
 # print("KNN Result")
 # print(classification_report(y_test, KNN_pred, zero_division=0))
 
-# --------------------------------------DT------------------------------------------
-# from sklearn.tree import DecisionTreeClassifier
+# --------------------------------------DT------------------------------------------ current optimal
+from sklearn.tree import DecisionTreeClassifier
 
-# dt_model = DecisionTreeClassifier(random_state=RANDOM_STATE,
-#                                   criterion='gini',   # Use Gini impurity for decision splits (default)
-#                                   max_depth=5,        # Limit the depth of the tree to prevent overfitting
-#                                   min_samples_split=10, # Minimum samples required to split a node
-#                                   min_samples_leaf=5, class_weight='balanced')  # Minimum samples required to be at a leaf node
-# dt_model.fit(X_train, y_train)
+dt_model = DecisionTreeClassifier(random_state=RANDOM_STATE,
+                                  criterion='gini',   # Use Gini impurity for decision splits (default)
+                                  max_depth=10,        # Limit the depth of the tree to prevent overfitting
+                                  min_samples_split=10, # Minimum samples required to split a node
+                                  min_samples_leaf=5,
+                                  class_weight='balanced',
+                                  splitter = "best",
+                                  min_weight_fraction_leaf = 0,
+                                  max_features = None,
+                                  max_leaf_nodes = None,
+                                  min_impurity_decrease = 0.001,
+                                  ccp_alpha = 0.005)
+evaluate_model(dt_model, "Decision Tree", X_train_smote, y_train_smote, X_test, y_test)
+
+# dt_model.fit(X_train_smote, y_train_smote)
 
 # dt_pred = dt_model.predict(X_test)
 # print("DT Result")
 # print(classification_report(y_test, dt_pred, zero_division=0))
 
-# # ------------------------------------------GBDT----------------------------------------
-# from sklearn.ensemble import GradientBoostingClassifier
+# ------------------------------------------GBDT---------------------------------------- Current Optimal
+from sklearn.ensemble import GradientBoostingClassifier
 
-# gbdt_model = GradientBoostingClassifier(n_estimators=100,    # Number of trees in the ensemble
-#                                         learning_rate=0.1,   # Learning rate to shrink contribution of each tree
-#                                         max_depth=5,         # Maximum depth of each individual tree
-#                                         random_state=RANDOM_STATE)
+gbdt_model = GradientBoostingClassifier(n_estimators=9,    # Number of trees in the ensemble
+                                        learning_rate=0.1,   # Learning rate to shrink contribution of each tree
+                                        max_depth=5,         # Maximum depth of each individual tree
+                                        random_state=RANDOM_STATE,
+                                        loss = "log_loss",
+                                        subsample = 1,
+                                        criterion = "squared_error",
+                                        min_samples_split = 3,
+                                        min_samples_leaf = 1,
+                                        min_weight_fraction_leaf = 0,
+                                        min_impurity_decrease = 0,
+                                        init = None,
+                                        max_features = None,
+                                        verbose = 0,
+                                        max_leaf_nodes = None,
+                                        warm_start = False,
+                                        validation_fraction = 0.1,
+                                        n_iter_no_change = None,
+                                        tol = 0.0001,
+                                        ccp_alpha = 0.001)
+evaluate_model(gbdt_model, "Gradient Boosting", X_train_smote, y_train_smote, X_test, y_test)
+
 # gbdt_model.fit(X_train_smote, y_train_smote)
 
-# gbdt_pred = gbdt_model.predict(X_test_scaled)
+# gbdt_pred = gbdt_model.predict(X_test)
 # print("GBDT Result")
 # print(classification_report(y_test, gbdt_pred, zero_division=0))
 
-# # --------------------------------------------ET-------------------------------------------
-# from sklearn.ensemble import ExtraTreesClassifier
+# --------------------------------------------ET------------------------------------------- Current Optimal
+from sklearn.ensemble import ExtraTreesClassifier
 
-# et_model = ExtraTreesClassifier(n_estimators=100,    # Number of trees in the ensemble
-#                                 max_depth=5,         # Maximum depth of each individual tree
-#                                 random_state=RANDOM_STATE,
-#                                 n_jobs=-1, class_weight='balanced')           # Use all cores for faster computation
-# et_model.fit(X_train_scaled, y_train)
+et_model = ExtraTreesClassifier(n_estimators=100,    # Number of trees in the ensemble
+                                max_depth=20,         # Maximum depth of each individual tree
+                                random_state=RANDOM_STATE,
+                                n_jobs=-1,
+                                class_weight='balanced',
+                                criterion = "gini",
+                                min_samples_split = 2,
+                                min_samples_leaf = 1,
+                                min_weight_fraction_leaf = 0,
+                                max_features = "sqrt",
+                                max_leaf_nodes = None,
+                                min_impurity_decrease= 0,
+                                bootstrap = True,
+                                oob_score = False,
+                                verbose = 0,
+                                warm_start = False,
+                                ccp_alpha = 0,
+                                max_samples = None)     
+evaluate_model(et_model, "Extra Trees", X_train, y_train, X_test, y_test)
+   
+# et_model.fit(X_train, y_train)
 
-# et_pred = et_model.predict(X_test_scaled)
+# et_pred = et_model.predict(X_test)
 # print("ET Result")
 # print(classification_report(y_test, et_pred, zero_division=0))
 
-# # --------------------------------------SVC---------------------------------------
-# from sklearn.svm import SVC
+# --------------------------------------SVC--------------------------------------- Optimal currently
+from sklearn.svm import SVC
 
-# svc_model = SVC(kernel='rbf', C=1.0, gamma='scale', random_state=RANDOM_STATE, class_weight='balanced')
-# svc_model.fit(X_train_smote, y_train_smote)  # Ensure target is binary
+svc_model = SVC(kernel='linear', 
+                C=0.5, 
+                gamma='scale', 
+                random_state=RANDOM_STATE, 
+                class_weight='balanced',
+                degree = 3,
+                coef0 = 0,
+                shrinking = True,
+                probability = False,
+                tol = 0.001,
+                cache_size = 200,
+                verbose = False,
+                max_iter = 1000,
+                decision_function_shape = "ovr",
+                break_ties = True)
+evaluate_model(svc_model, "Support Vector Classifier", X_train_scaled, y_train, X_test_scaled, y_test)
+
+# svc_model.fit(X_train_scaled, y_train)  # Ensure target is binary
 
 # svc_pred = svc_model.predict(X_test_scaled)
 # print("SVC Result")
 # print(classification_report(y_test, svc_pred, zero_division=0))
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from sklearn.decomposition import PCA
+# ------------------------------------ Results ----------------------------------
+def process_report(report):
+    # Convert to DataFrame
+    df = pd.DataFrame(report).transpose()
+    # Round numeric values to 3 decimal places
+    return df.round(3)
 
-# Plot feature importance
-def plot_feature_importance(model, feature_names):
-    importance = model.feature_importances_
-    sorted_idx = importance.argsort()
-    plt.figure(figsize=(10, 6))
-    plt.barh(range(len(sorted_idx)), importance[sorted_idx], align="center")
-    plt.yticks(range(len(sorted_idx)), [feature_names[i] for i in sorted_idx])
-    plt.title("Feature Importance")
-    plt.show()
+# Store formatted DataFrames in a dictionary
+formatted_results = {model: process_report(report) for model, report in model_results.items()}
 
-plot_feature_importance(RF_model, features)
+# Print results for all models
+for model, df in formatted_results.items():
+    print(f"Results for {model}:")
+    print(df)
+    print("\n")
 
-# Confusion Matrix
-def plot_confusion_matrix(y_true, y_pred, labels):
-    cm = confusion_matrix(y_true, y_pred, labels=labels)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
-    disp.plot(cmap="Blues", values_format="d")
-    plt.title("Confusion Matrix")
-    plt.show()
+# -----------------------EXPORTING TABLES IF NEEDED---------------------
+# import matplotlib.pyplot as plt
 
-plot_confusion_matrix(y_test, RF_pred, labels=RF_model.classes_)
+# # Assuming `formatted_results` is created as in the previous example
+# for model, df in formatted_results.items():
+#     fig, ax = plt.subplots(figsize=(10, 4))  # Adjust the figure size as needed
+#     ax.axis('tight')  # Turn off axes
+#     ax.axis('off')  # Turn off axes
 
-# Visualizing Clusters with PCA
-def plot_pca(X, y, title="PCA of Socioeconomic Features"):
-    pca = PCA(n_components=2)
-    X_pca = pca.fit_transform(X)
-    plt.figure(figsize=(10, 8))
-    sns.scatterplot(
-        x=X_pca[:, 0],
-        y=X_pca[:, 1],
-        hue=y,
-        palette="viridis",
-        s=50,
-        alpha=0.8
-    )
-    plt.title(title)
-    plt.xlabel("PCA Component 1")
-    plt.ylabel("PCA Component 2")
-    plt.legend(title="Crime Rate")
-    plt.grid()
-    plt.show()
+#     # Add a table at the axes
+#     table = ax.table(cellText=df.reset_index().values,  # Data for the table
+#                      colLabels=["Class"] + df.columns.tolist(),  # Column headers
+#                      loc='center',  # Position table at the center
+#                      cellLoc='center')  # Align text to center
+    
+#     # Format the table
+#     table.auto_set_font_size(False)
+#     table.set_fontsize(10)
+#     table.auto_set_column_width(col=list(range(len(df.columns) + 1)))
+    
+#     # Set title
+#     ax.set_title(f"Classification Report: {model}", fontsize=14, pad=20)
 
-plot_pca(X_test_scaled, y_test, title="PCA of Testing Data (Post-Scaling)")
+#     # Show the plot
+#     plt.show()
 
-# Precision, Recall, and F1 Scores per Class
-def plot_classification_report(report):
-    report_data = []
-    for label, metrics in report.items():
-        if isinstance(metrics, dict):
-            report_data.append({"class": label, **metrics})
-    df_report = pd.DataFrame(report_data)
-    df_report.set_index("class", inplace=True)
-    df_report[["precision", "recall", "f1-score"]].plot(kind="bar", figsize=(10, 6), cmap="viridis")
-    plt.title("Classification Report Metrics")
-    plt.ylabel("Score")
-    plt.xticks(rotation=45)
-    plt.grid(axis="y")
-    plt.show()
 
-# Convert classification report to dict and plot
-report_dict = classification_report(y_test, RF_pred, output_dict=True, zero_division=0)
-plot_classification_report(report_dict)
+
+
+
+#  ---------------------------------
+# PLOTTING
+# ----------------------------------
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+# from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+# from sklearn.decomposition import PCA
+
+# # Plot feature importance
+# def plot_feature_importance(model, feature_names):
+#     importance = model.feature_importances_
+#     sorted_idx = importance.argsort()
+#     plt.figure(figsize=(10, 6))
+#     plt.barh(range(len(sorted_idx)), importance[sorted_idx], align="center")
+#     plt.yticks(range(len(sorted_idx)), [feature_names[i] for i in sorted_idx])
+#     plt.title("Feature Importance")
+#     plt.show()
+
+# plot_feature_importance(RF_model, features)
+
+# # Confusion Matrix
+# def plot_confusion_matrix(y_true, y_pred, labels):
+#     cm = confusion_matrix(y_true, y_pred, labels=labels)
+#     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+#     disp.plot(cmap="Blues", values_format="d")
+#     plt.title("Confusion Matrix")
+#     plt.show()
+
+# plot_confusion_matrix(y_test, RF_pred, labels=RF_model.classes_)
+
+# # Visualizing Clusters with PCA
+# def plot_pca(X, y, title="PCA of Socioeconomic Features"):
+#     pca = PCA(n_components=2)
+#     X_pca = pca.fit_transform(X)
+#     plt.figure(figsize=(10, 8))
+#     sns.scatterplot(
+#         x=X_pca[:, 0],
+#         y=X_pca[:, 1],
+#         hue=y,
+#         palette="viridis",
+#         s=50,
+#         alpha=0.8
+#     )
+#     plt.title(title)
+#     plt.xlabel("PCA Component 1")
+#     plt.ylabel("PCA Component 2")
+#     plt.legend(title="Crime Rate")
+#     plt.grid()
+#     plt.show()
+
+# plot_pca(X_test_scaled, y_test, title="PCA of Testing Data (Post-Scaling)")
+
+# # Precision, Recall, and F1 Scores per Class
+# def plot_classification_report(report):
+#     report_data = []
+#     for label, metrics in report.items():
+#         if isinstance(metrics, dict):
+#             report_data.append({"class": label, **metrics})
+#     df_report = pd.DataFrame(report_data)
+#     df_report.set_index("class", inplace=True)
+#     df_report[["precision", "recall", "f1-score"]].plot(kind="bar", figsize=(10, 6), cmap="viridis")
+#     plt.title("Classification Report Metrics")
+#     plt.ylabel("Score")
+#     plt.xticks(rotation=45)
+#     plt.grid(axis="y")
+#     plt.show()
+
+# # Convert classification report to dict and plot
+# report_dict = classification_report(y_test, RF_pred, output_dict=True, zero_division=0)
+# plot_classification_report(report_dict)
