@@ -161,14 +161,14 @@ X_train_smote = pd.DataFrame(X_train_smote, columns=features)
 # -----------------------------------------RF------------------------------------
 from sklearn.ensemble import RandomForestClassifier
 
-RF_model = RandomForestClassifier(n_estimators = 100,
-                                  criterion= 'gini',
-                                  max_depth = None,
+RF_model = RandomForestClassifier(n_estimators = 1000,
+                                  criterion= 'entropy',
+                                  max_depth = 5,
                                   min_samples_split = 2,
-                                  min_samples_leaf = 1,
+                                  min_samples_leaf = 4,
                                   min_weight_fraction_leaf = 0,
-                                  max_features = "sqrt",
-                                  max_leaf_nodes = None,
+                                  max_features = 'sqrt',
+                                  max_leaf_nodes = None,# 7 is more balanced
                                   min_impurity_decrease = 0,
                                   bootstrap = True,
                                   oob_score = False,
