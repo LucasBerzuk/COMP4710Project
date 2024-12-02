@@ -118,11 +118,14 @@ data_computed['Crime Rate'] = data_computed['Crime Count'].apply(categorize_crim
 
 # Set features
 features = [
-   'No Certification Ratio', 'Minority Ratio','Employed Ratio','Pop. Density (per km^2)','Avg. Income','Ownership Ratio'
-#   'High School Diploma Ratio', 'Post Secondary Ratio', 'Employed Ratio',
-#   'Avg. Income', 'Household Income Ratio', 'Ownership Ratio', 'Pop. Density (per km^2)', 
-#   'Indigenous Ratio', 'Minority Ratio', 'Immigrant Ratio', 
-#   'No Certification Ratio', 'LICO Ratio', 'Male Ratio', 'Female Ratio'
+    'No Certification Ratio',
+    'Employed Ratio', 
+    'Pop. Density (per km^2)', 
+    'Avg. Income', 
+    'Ownership Ratio', 
+    'High School Diploma Ratio', 
+    'Indigenous Ratio', 
+    'Immigrant Ratio', 
 ]
 
 # Now set the target variable to the new binary category
@@ -140,7 +143,7 @@ X_train = pd.DataFrame(X_train, columns=features)
 X_test = pd.DataFrame(X_test, columns=features)
 
 # ------------------------Scaling--------------------------------
-from sklearn.preprocessing import StandardScaler, RobustScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler, MaxAbsScaler, Normalizer, QuantileTransformer, PowerTransformer
 
 # Instantiate the scaler
 scaler = RobustScaler()
@@ -311,11 +314,11 @@ et_model = ExtraTreesClassifier(n_estimators=100,    # Number of trees in the en
                                 random_state=RANDOM_STATE,
                                 n_jobs=-1,
                                 class_weight='balanced',
-                                criterion = "gini",
+                                criterion = 'gini',
                                 min_samples_split = 2,
                                 min_samples_leaf = 1,
                                 min_weight_fraction_leaf = 0,
-                                max_features = "sqrt",
+                                max_features = 'sqrt',
                                 max_leaf_nodes = None,
                                 min_impurity_decrease= 0,
                                 bootstrap = True,
@@ -324,7 +327,7 @@ et_model = ExtraTreesClassifier(n_estimators=100,    # Number of trees in the en
                                 warm_start = False,
                                 ccp_alpha = 0,
                                 max_samples = None)     
-evaluate_model(et_model, "Extra Trees", X_train, y_train, X_test, y_test)
+evaluate_model(et_model, "Extra Trees", X_train_scaled, y_train, X_test_scaled, y_test)
    
 # et_model.fit(X_train, y_train)
 
