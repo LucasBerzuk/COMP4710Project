@@ -5,20 +5,27 @@ import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
-RANDOM_STATE = 184
+RANDOM_STATE = 23
 
 # create pickel files to load data quickly
 try:
   CensusData = joblib.load("CensusNeighbourhoods.pkl")
   CrimeData = joblib.load("CrimeByNeighbourhood.pkl")
+  MoreCrime = joblib.load("MoreCrime.pkl")
   print("Loaded from cache\n")
 
 except FileNotFoundError:
   CensusData = pd.read_csv("CensusNeighbourhoods.csv")
   CrimeData = pd.read_csv("CrimeByNeighbourhood.csv")
+  MoreCrime = pd.read_csv("MoreCrime.csv")
   joblib.dump(CensusData, "CensusNeighbourhoods.pkl")
   joblib.dump(CrimeData, "CrimeByNeighbourhood.pkl")
+  joblib.dump(MoreCrime, "MoreCrime.pkl")
   print("Loaded from CSV and cached\n")
+
+# ---------------------------------------------------------
+# Editing the census data
+# ---------------------------------------------------------
 
 all_indicators = [
   'Pop.', 'Pop. Density (per km^2)', 'Male Pop.', 'Female Pop.', 'Indigenous Identity',
@@ -90,50 +97,158 @@ all_computed_indicators = [
 data_computed = pd.DataFrame({'Name': CensusData['Name']})
 data_computed[all_computed_indicators] = CensusData[all_computed_indicators]
 
+# ------------------------------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------
+# Break down the moreData by year and join with data_computed
+# ------------------------------------------------------------
+
+newData = MoreCrime.groupby(["Month of Report Date", "Name"]).sum().reset_index()
+
+months13 = ["Jan-13", "Feb-13", "Mar-13", "Apr-13", "May-13", "Jun-13", "Jul-13", "Aug-13", "Sep-13", "Oct-13", "Nov-13", "Dec-13"]
+data13 = newData[newData['Month of Report Date'].isin(months13)]
+data13Grouped = data13.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months14 = ["Jan-14", "Feb-14", "Mar-14", "Apr-14", "May-14", "Jun-14", "Jul-14", "Aug-14", "Sep-14", "Oct-14", "Nov-14", "Dec-14"]
+data14 = newData[newData['Month of Report Date'].isin(months14)]
+data14Grouped = data14.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months15 = ["Jan-15", "Feb-15", "Mar-15", "Apr-15", "May-15", "Jun-15", "Jul-15", "Aug-15", "Sep-15", "Oct-15", "Nov-15", "Dec-15"]
+data15 = newData[newData['Month of Report Date'].isin(months15)]
+data15Grouped = data15.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months16 = ["Jan-16", "Feb-16", "Mar-16", "Apr-16", "May-16", "Jun-16", "Jul-16", "Aug-16", "Sep-16", "Oct-16", "Nov-16", "Dec-16"]
+data16 = newData[newData['Month of Report Date'].isin(months16)]
+data16Grouped = data16.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months17 = ["Jan-17", "Feb-17", "Mar-17", "Apr-17", "May-17", "Jun-17", "Jul-17", "Aug-17", "Sep-17", "Oct-17", "Nov-17", "Dec-17"]
+data17 = newData[newData['Month of Report Date'].isin(months17)]
+data17Grouped = data17.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months18 = ["Jan-18", "Feb-18", "Mar-18", "Apr-18", "May-18", "Jun-18", "Jul-18", "Aug-18", "Sep-18", "Oct-18", "Nov-18", "Dec-18"]
+data18 = newData[newData['Month of Report Date'].isin(months18)]
+data18Grouped = data18.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months19 = ["Jan-19", "Feb-19", "Mar-19", "Apr-19", "May-19", "Jun-19", "Jul-19", "Aug-19", "Sep-19", "Oct-19", "Nov-19", "Dec-19"]
+data19 = newData[newData['Month of Report Date'].isin(months19)]
+data19Grouped = data19.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months20 = ["Jan-20", "Feb-20", "Mar-20", "Apr-20", "May-20", "Jun-20", "Jul-20", "Aug-20", "Sep-20", "Oct-20", "Nov-20", "Dec-20"]
+data20 = newData[newData['Month of Report Date'].isin(months20)]
+data20Grouped = data20.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months21 = ["Jan-21", "Feb-21", "Mar-21", "Apr-21", "May-21", "Jun-21", "Jul-21", "Aug-21", "Sep-21", "Oct-21", "Nov-21", "Dec-21"]
+data21 = newData[newData['Month of Report Date'].isin(months21)]
+data21Grouped = data21.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months22 = ["Jan-22", "Feb-22", "Mar-22", "Apr-22", "May-22", "Jun-22", "Jul-22", "Aug-22", "Sep-22", "Oct-22", "Nov-22", "Dec-22"]
+data22 = newData[newData['Month of Report Date'].isin(months22)]
+data22Grouped = data22.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months23 = ["Jan-23", "Feb-23", "Mar-23", "Apr-23", "May-23", "Jun-23", "Jul-23", "Aug-23", "Sep-23", "Oct-23", "Nov-23", "Dec-23"]
+data23 = newData[newData['Month of Report Date'].isin(months23)]
+data23Grouped = data23.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+months24 = ["Jan-24", "Feb-24", "Mar-24", "Apr-24", "May-24", "Jun-24", "Jul-24", "Aug-24", "Sep-24", "Oct-24", "Nov-24", "Dec-24"]
+data24 = newData[newData['Month of Report Date'].isin(months24)]
+data24Grouped = data24.groupby("Name").agg({"Count": "sum"}).reset_index()
+
+# Merge
+merged13 = pd.merge(data13Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged13 = merged13.dropna(subset=['Count'])
+merged14 = pd.merge(data14Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged14 = merged14.dropna(subset=['Count'])
+merged15 = pd.merge(data15Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged15 = merged15.dropna(subset=['Count'])
+merged16 = pd.merge(data16Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged16 = merged16.dropna(subset=['Count'])
+merged17 = pd.merge(data17Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged17 = merged17.dropna(subset=['Count'])
+merged18 = pd.merge(data18Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged18 = merged18.dropna(subset=['Count'])
+merged19 = pd.merge(data19Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged19 = merged19.dropna(subset=['Count'])
+merged20 = pd.merge(data20Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged20 = merged20.dropna(subset=['Count'])
+merged21 = pd.merge(data21Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged21 = merged21.dropna(subset=['Count'])
+merged22 = pd.merge(data22Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged22 = merged22.dropna(subset=['Count'])
+merged23 = pd.merge(data23Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged23 = merged23.dropna(subset=['Count'])
+merged24 = pd.merge(data24Grouped[['Name', 'Count']], CensusData, on="Name", how="right")
+merged24 = merged24.dropna(subset=['Count'])
+
+# Edit this to alter what data we are using
+finalData = pd.concat([merged23], axis=0, ignore_index=True)
+
+# Ignore
+# Filter the dataframe for rows where 'Name' is 'AGASSIZ'
+# agassiz_data = finalData[finalData['Name'] == 'ALPINE PLACE']
+
+# # Select only the 'Name' and 'Count' columns
+# agassiz_data = agassiz_data[['Name', 'Count']]
+
+# # Print the result
+# print(agassiz_data)
+# pd.set_option("display.max_rows", None)
+# print(finalData)
+
 # ---------------------------
 # Classification Testing
 # ---------------------------
 
-# Count crimes per neighborhood
-crime_count = CrimeData.groupby('Name').size().reset_index(name='Crime Count')
+# Uncomment this and change dataset name to go back to orignal models
+# # Count crimes per neighborhood
+# crime_count = CrimeData.groupby('Name').size().reset_index(name='Crime Count')
 
-# Merge crime count with the census data
-data_computed = pd.merge(CensusData, crime_count, left_on='Name', right_on='Name', how='left')
+# # Merge crime count with the census data
+# data_computed = pd.merge(CensusData, crime_count, left_on='Name', right_on='Name', how='left')
 
-# Handle missing values and preprocess the data
-# Fill missing crime counts with 0 for neighborhoods with no reported crime
-data_computed['Crime Count'] = data_computed['Crime Count'].fillna(0)
+# # Handle missing values and preprocess the data
+# # Fill missing crime counts with 0 for neighborhoods with no reported crime
+# data_computed['Crime Count'] = data_computed['Crime Count'].fillna(0)
 
+
+
+
+# This is the bounds for what is low mid and high
 # Add a new column 'Crime Rate' based on the crime count
 def categorize_crime_rate(count):
     if count <= 99:
         return 'Low'
-    elif count <= 299:
+    elif count <= 199:
         return 'Mid'
     else:
         return 'High'
 
 # Apply the function to create the 'Crime Rate' column
-data_computed['Crime Rate'] = data_computed['Crime Count'].apply(categorize_crime_rate)
+finalData['Crime Rate'] = finalData['Count'].apply(categorize_crime_rate)
 
 # Set features
 features = [
+    #'Ownership Ratio'
+#     'High School Diploma Ratio', 'Post Secondary Ratio', 'Employed Ratio',
+#   'Avg. Income', 'Household Income Ratio', 'Ownership Ratio', 'Pop. Density (per km^2)', 
+#   'Indigenous Ratio', 'Minority Ratio', 'Immigrant Ratio', 
+#   'No Certification Ratio', 'LICO Ratio', 'Male Ratio', 'Female Ratio'
     'No Certification Ratio',
     'Employed Ratio', 
     'Pop. Density (per km^2)', 
     'Avg. Income', 
     'Ownership Ratio', 
-    'High School Diploma Ratio', 
-    'Indigenous Ratio', 
-    'Immigrant Ratio', 
+    'Minority Ratio'
+    # 'High School Diploma Ratio', 
+    # 'Indigenous Ratio', 
+    # 'Immigrant Ratio'
 ]
 
 # Now set the target variable to the new binary category
 target = 'Crime Rate'
 
 # Split the data into features and target
-X = data_computed[features] 
-y = data_computed[target]  
+X = finalData[features] 
+y = finalData[target]  
 
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = RANDOM_STATE)
@@ -174,11 +289,19 @@ def evaluate_model(model, model_name, X_train, y_train, X_test, y_test):
 # -----------------------------------------RF------------------------------------ Optimal solution so far
 from sklearn.ensemble import RandomForestClassifier
 
-RF_model = RandomForestClassifier(n_estimators = 1000,
-                                  criterion= 'entropy',
+classes = ['High', 'Low', 'Mid']
+counts = [72, 151, 45]
+
+# Compute class weights manually (inverse of class frequency)
+total = sum(counts)
+class_weights = {classes[i]: total / (len(classes) * counts[i]) for i in range(len(classes))}
+
+
+RF_model = RandomForestClassifier(n_estimators = 1100,
+                                  criterion= 'gini',
                                   max_depth = 5,
                                   min_samples_split = 2,
-                                  min_samples_leaf = 4,
+                                  min_samples_leaf = 23,
                                   min_weight_fraction_leaf = 0,
                                   max_features = 'sqrt',
                                   max_leaf_nodes = None,# 7 is more balanced
@@ -193,173 +316,173 @@ RF_model = RandomForestClassifier(n_estimators = 1000,
                                   ccp_alpha = 0,
                                   max_samples = None)
 evaluate_model(RF_model, "Random Forest", X_train, y_train, X_test, y_test)
-# RF_model.fit(X_train, y_train)
+# RF_model.fit(X_train_smote, y_train_smote)
 
 # RF_pred = RF_model.predict(X_test)
 # print("RF Result")
 # print(classification_report(y_test, RF_pred, zero_division=0))
 
 # --------------------------------------MLP-NN-------------------------------------Optimal so far
-from sklearn.neural_network import MLPClassifier
+# from sklearn.neural_network import MLPClassifier
 
-MLP_model = MLPClassifier(hidden_layer_sizes=(100,100),  # One hidden layer with 100 neurons
-                          solver='adam',             # Optimizer (Adam)
-                          activation='relu',         # ReLU activation function
-                          max_iter=1500,             # Number of iterations for training
-                          random_state=RANDOM_STATE, 
-                          alpha = 0.0383,
-                          batch_size = "auto",
-                          learning_rate = "constant",
-                          learning_rate_init = 0.001,
-                          power_t = 0.5,
-                          shuffle = True,
-                          tol = 0.0001,
-                          verbose = False,
-                          warm_start = False,
-                          momentum = 0.9,
-                          nesterovs_momentum = True,
-                          early_stopping = False,
-                          validation_fraction = 0.1,
-                          beta_1 = 0.9,
-                          beta_2 = 0.999,
-                          epsilon = 0.00000001,
-                          n_iter_no_change = 10,
-                          max_fun = 15000)
-evaluate_model(MLP_model, "MLP Neural Network", X_train_smote, y_train_smote, X_test, y_test)
+# MLP_model = MLPClassifier(hidden_layer_sizes=(100,100),  # One hidden layer with 100 neurons
+#                           solver='adam',             # Optimizer (Adam)
+#                           activation='relu',         # ReLU activation function
+#                           max_iter=1500,             # Number of iterations for training
+#                           random_state=RANDOM_STATE, 
+#                           alpha = 0.0383,
+#                           batch_size = "auto",
+#                           learning_rate = "constant",
+#                           learning_rate_init = 0.001,
+#                           power_t = 0.5,
+#                           shuffle = True,
+#                           tol = 0.0001,
+#                           verbose = False,
+#                           warm_start = False,
+#                           momentum = 0.9,
+#                           nesterovs_momentum = True,
+#                           early_stopping = False,
+#                           validation_fraction = 0.1,
+#                           beta_1 = 0.9,
+#                           beta_2 = 0.999,
+#                           epsilon = 0.00000001,
+#                           n_iter_no_change = 10,
+#                           max_fun = 15000)
+# evaluate_model(MLP_model, "MLP Neural Network", X_train_smote, y_train_smote, X_test, y_test)
 
-# MLP_model.fit(X_train_smote, y_train_smote)
+# # MLP_model.fit(X_train_smote, y_train_smote)
 
-# MLP_pred = MLP_model.predict(X_test)
-# print("MLP Result")
-# print(classification_report(y_test, MLP_pred, zero_division=0))
+# # MLP_pred = MLP_model.predict(X_test)
+# # print("MLP Result")
+# # print(classification_report(y_test, MLP_pred, zero_division=0))
 
-# ---------------------------------------K-NN-----------------------------------------Optimal so far
-from sklearn.neighbors import KNeighborsClassifier
+# # ---------------------------------------K-NN-----------------------------------------Optimal so far
+# from sklearn.neighbors import KNeighborsClassifier
 
-KNN_model = KNeighborsClassifier(n_neighbors=3,  # Number of neighbors (k)
-                                 metric='minkowski',  # Distance metric (Minkowski is the default)
-                                 p=3,                 # p=2 corresponds to Euclidean distance
-                                 n_jobs=None,
-                                 weights = "uniform",
-                                 algorithm = "auto",
-                                 leaf_size = 30,
-                                 metric_params = None)
-evaluate_model(KNN_model, "K-Nearest Neighbors", X_train_scaled, y_train, X_test_scaled, y_test)
+# KNN_model = KNeighborsClassifier(n_neighbors=3,  # Number of neighbors (k)
+#                                  metric='minkowski',  # Distance metric (Minkowski is the default)
+#                                  p=3,                 # p=2 corresponds to Euclidean distance
+#                                  n_jobs=None,
+#                                  weights = "uniform",
+#                                  algorithm = "auto",
+#                                  leaf_size = 30,
+#                                  metric_params = None)
+# evaluate_model(KNN_model, "K-Nearest Neighbors", X_train_scaled, y_train, X_test_scaled, y_test)
 
-# KNN_model.fit(X_train_scaled, y_train)
+# # KNN_model.fit(X_train_scaled, y_train)
 
-# KNN_pred = KNN_model.predict(X_test_scaled)
-# print("KNN Result")
-# print(classification_report(y_test, KNN_pred, zero_division=0))
+# # KNN_pred = KNN_model.predict(X_test_scaled)
+# # print("KNN Result")
+# # print(classification_report(y_test, KNN_pred, zero_division=0))
 
-# --------------------------------------DT------------------------------------------ current optimal
-from sklearn.tree import DecisionTreeClassifier
+# # --------------------------------------DT------------------------------------------ current optimal
+# from sklearn.tree import DecisionTreeClassifier
 
-dt_model = DecisionTreeClassifier(random_state=RANDOM_STATE,
-                                  criterion='gini',   # Use Gini impurity for decision splits (default)
-                                  max_depth=10,        # Limit the depth of the tree to prevent overfitting
-                                  min_samples_split=10, # Minimum samples required to split a node
-                                  min_samples_leaf=5,
-                                  class_weight='balanced',
-                                  splitter = "best",
-                                  min_weight_fraction_leaf = 0,
-                                  max_features = None,
-                                  max_leaf_nodes = None,
-                                  min_impurity_decrease = 0.001,
-                                  ccp_alpha = 0.005)
-evaluate_model(dt_model, "Decision Tree", X_train_smote, y_train_smote, X_test, y_test)
+# dt_model = DecisionTreeClassifier(random_state=RANDOM_STATE,
+#                                   criterion='gini',   # Use Gini impurity for decision splits (default)
+#                                   max_depth=10,        # Limit the depth of the tree to prevent overfitting
+#                                   min_samples_split=10, # Minimum samples required to split a node
+#                                   min_samples_leaf=5,
+#                                   class_weight='balanced',
+#                                   splitter = "best",
+#                                   min_weight_fraction_leaf = 0,
+#                                   max_features = None,
+#                                   max_leaf_nodes = None,
+#                                   min_impurity_decrease = 0.001,
+#                                   ccp_alpha = 0.005)
+# evaluate_model(dt_model, "Decision Tree", X_train_smote, y_train_smote, X_test, y_test)
 
-# dt_model.fit(X_train_smote, y_train_smote)
+# # dt_model.fit(X_train_smote, y_train_smote)
 
-# dt_pred = dt_model.predict(X_test)
-# print("DT Result")
-# print(classification_report(y_test, dt_pred, zero_division=0))
+# # dt_pred = dt_model.predict(X_test)
+# # print("DT Result")
+# # print(classification_report(y_test, dt_pred, zero_division=0))
 
-# ------------------------------------------GBDT---------------------------------------- Current Optimal
-from sklearn.ensemble import GradientBoostingClassifier
+# # ------------------------------------------GBDT---------------------------------------- Current Optimal
+# from sklearn.ensemble import GradientBoostingClassifier
 
-gbdt_model = GradientBoostingClassifier(n_estimators=9,    # Number of trees in the ensemble
-                                        learning_rate=0.1,   # Learning rate to shrink contribution of each tree
-                                        max_depth=5,         # Maximum depth of each individual tree
-                                        random_state=RANDOM_STATE,
-                                        loss = "log_loss",
-                                        subsample = 1,
-                                        criterion = "squared_error",
-                                        min_samples_split = 3,
-                                        min_samples_leaf = 1,
-                                        min_weight_fraction_leaf = 0,
-                                        min_impurity_decrease = 0,
-                                        init = None,
-                                        max_features = None,
-                                        verbose = 0,
-                                        max_leaf_nodes = None,
-                                        warm_start = False,
-                                        validation_fraction = 0.1,
-                                        n_iter_no_change = None,
-                                        tol = 0.0001,
-                                        ccp_alpha = 0.001)
-evaluate_model(gbdt_model, "Gradient Boosting", X_train_smote, y_train_smote, X_test, y_test)
+# gbdt_model = GradientBoostingClassifier(n_estimators=9,    # Number of trees in the ensemble
+#                                         learning_rate=0.1,   # Learning rate to shrink contribution of each tree
+#                                         max_depth=5,         # Maximum depth of each individual tree
+#                                         random_state=RANDOM_STATE,
+#                                         loss = "log_loss",
+#                                         subsample = 1,
+#                                         criterion = "squared_error",
+#                                         min_samples_split = 3,
+#                                         min_samples_leaf = 1,
+#                                         min_weight_fraction_leaf = 0,
+#                                         min_impurity_decrease = 0,
+#                                         init = None,
+#                                         max_features = None,
+#                                         verbose = 0,
+#                                         max_leaf_nodes = None,
+#                                         warm_start = False,
+#                                         validation_fraction = 0.1,
+#                                         n_iter_no_change = None,
+#                                         tol = 0.0001,
+#                                         ccp_alpha = 0.001)
+# evaluate_model(gbdt_model, "Gradient Boosting", X_train_smote, y_train_smote, X_test, y_test)
 
-# gbdt_model.fit(X_train_smote, y_train_smote)
+# # gbdt_model.fit(X_train_smote, y_train_smote)
 
-# gbdt_pred = gbdt_model.predict(X_test)
-# print("GBDT Result")
-# print(classification_report(y_test, gbdt_pred, zero_division=0))
+# # gbdt_pred = gbdt_model.predict(X_test)
+# # print("GBDT Result")
+# # print(classification_report(y_test, gbdt_pred, zero_division=0))
 
-# --------------------------------------------ET------------------------------------------- Current Optimal
-from sklearn.ensemble import ExtraTreesClassifier
+# # --------------------------------------------ET------------------------------------------- Current Optimal
+# from sklearn.ensemble import ExtraTreesClassifier
 
-et_model = ExtraTreesClassifier(n_estimators=100,    # Number of trees in the ensemble
-                                max_depth=20,         # Maximum depth of each individual tree
-                                random_state=RANDOM_STATE,
-                                n_jobs=-1,
-                                class_weight='balanced',
-                                criterion = 'gini',
-                                min_samples_split = 2,
-                                min_samples_leaf = 1,
-                                min_weight_fraction_leaf = 0,
-                                max_features = 'sqrt',
-                                max_leaf_nodes = None,
-                                min_impurity_decrease= 0,
-                                bootstrap = True,
-                                oob_score = False,
-                                verbose = 0,
-                                warm_start = False,
-                                ccp_alpha = 0,
-                                max_samples = None)     
-evaluate_model(et_model, "Extra Trees", X_train_scaled, y_train, X_test_scaled, y_test)
+# et_model = ExtraTreesClassifier(n_estimators=100,    # Number of trees in the ensemble
+#                                 max_depth=20,         # Maximum depth of each individual tree
+#                                 random_state=RANDOM_STATE,
+#                                 n_jobs=-1,
+#                                 class_weight='balanced',
+#                                 criterion = 'gini',
+#                                 min_samples_split = 2,
+#                                 min_samples_leaf = 1,
+#                                 min_weight_fraction_leaf = 0,
+#                                 max_features = 'sqrt',
+#                                 max_leaf_nodes = None,
+#                                 min_impurity_decrease= 0,
+#                                 bootstrap = True,
+#                                 oob_score = False,
+#                                 verbose = 0,
+#                                 warm_start = False,
+#                                 ccp_alpha = 0,
+#                                 max_samples = None)     
+# evaluate_model(et_model, "Extra Trees", X_train_scaled, y_train, X_test_scaled, y_test)
    
 # et_model.fit(X_train, y_train)
 
 # et_pred = et_model.predict(X_test)
-# print("ET Result")
-# print(classification_report(y_test, et_pred, zero_division=0))
+# # print("ET Result")
+# # print(classification_report(y_test, et_pred, zero_division=0))
 
-# --------------------------------------SVC--------------------------------------- Optimal currently
-from sklearn.svm import SVC
+# # --------------------------------------SVC--------------------------------------- Optimal currently
+# from sklearn.svm import SVC
 
-svc_model = SVC(kernel='linear', 
-                C=0.5, 
-                gamma='scale', 
-                random_state=RANDOM_STATE, 
-                class_weight='balanced',
-                degree = 3,
-                coef0 = 0,
-                shrinking = True,
-                probability = False,
-                tol = 0.001,
-                cache_size = 200,
-                verbose = False,
-                max_iter = 1000,
-                decision_function_shape = "ovr",
-                break_ties = True)
-evaluate_model(svc_model, "Support Vector Classifier", X_train_scaled, y_train, X_test_scaled, y_test)
+# svc_model = SVC(kernel='linear', 
+#                 C=0.5, 
+#                 gamma='scale', 
+#                 random_state=RANDOM_STATE, 
+#                 class_weight='balanced',
+#                 degree = 3,
+#                 coef0 = 0,
+#                 shrinking = True,
+#                 probability = False,
+#                 tol = 0.001,
+#                 cache_size = 200,
+#                 verbose = False,
+#                 max_iter = 1500,
+#                 decision_function_shape = "ovr",
+#                 break_ties = True)
+# evaluate_model(svc_model, "Support Vector Classifier", X_train_scaled, y_train, X_test_scaled, y_test)
 
-# svc_model.fit(X_train_scaled, y_train)  # Ensure target is binary
+# # svc_model.fit(X_train_scaled, y_train)  # Ensure target is binary
 
-# svc_pred = svc_model.predict(X_test_scaled)
-# print("SVC Result")
-# print(classification_report(y_test, svc_pred, zero_division=0))
+# # svc_pred = svc_model.predict(X_test_scaled)
+# # print("SVC Result")
+# # print(classification_report(y_test, svc_pred, zero_division=0))
 
 # ------------------------------------ Results ----------------------------------
 def process_report(report):
@@ -407,9 +530,9 @@ for model, df in formatted_results.items():
 
 
 
-#  ---------------------------------
-# PLOTTING
-# ----------------------------------
+# #  ---------------------------------
+# # PLOTTING
+# # ----------------------------------
 # import matplotlib.pyplot as plt
 # import seaborn as sns
 # from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
@@ -425,7 +548,7 @@ for model, df in formatted_results.items():
 #     plt.title("Feature Importance")
 #     plt.show()
 
-# plot_feature_importance(RF_model, features)
+# plot_feature_importance(et_model, features)
 
 # # Confusion Matrix
 # def plot_confusion_matrix(y_true, y_pred, labels):
@@ -435,7 +558,7 @@ for model, df in formatted_results.items():
 #     plt.title("Confusion Matrix")
 #     plt.show()
 
-# plot_confusion_matrix(y_test, RF_pred, labels=RF_model.classes_)
+# plot_confusion_matrix(y_test, et_pred, labels=RF_model.classes_)
 
 # # Visualizing Clusters with PCA
 # def plot_pca(X, y, title="PCA of Socioeconomic Features"):
@@ -475,5 +598,5 @@ for model, df in formatted_results.items():
 #     plt.show()
 
 # # Convert classification report to dict and plot
-# report_dict = classification_report(y_test, RF_pred, output_dict=True, zero_division=0)
+# report_dict = classification_report(y_test, et_pred, output_dict=True, zero_division=0)
 # plot_classification_report(report_dict)
