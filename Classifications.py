@@ -249,16 +249,16 @@ trimmed_data['Crime Rate'] = trimmed_data['Count'].apply(categorize_crime_rate)
 # Set features, these are the 6 found that were the least correlated, if we want to add features back
 # they can be grabbed from 'all_computed_indicators' on line 87
 features = [
-    # 'No Certification Ratio',
-    # 'Employed Ratio', 
-    # 'Pop. Density (per km^2)', 
-    # 'Avg. Income', 
-    # 'Ownership Ratio', 
-    # 'Minority Ratio',
-    'High School Diploma Ratio', 'Post Secondary Ratio', 'Employed Ratio',
-  'Avg. Income', 'Household Income Ratio', 'Ownership Ratio', 'Pop. Density (per km^2)', 
-  'Indigenous Ratio', 'Minority Ratio', 'Immigrant Ratio', 
-  'No Certification Ratio', 'LICO Ratio', 'Male Ratio', 'Female Ratio'
+    'No Certification Ratio',
+    'Employed Ratio', 
+    'Pop. Density (per km^2)', 
+    'Avg. Income', 
+    'Ownership Ratio', 
+    'Minority Ratio'
+#     'High School Diploma Ratio', 'Post Secondary Ratio', 'Employed Ratio',
+#   'Avg. Income', 'Household Income Ratio', 'Ownership Ratio', 'Pop. Density (per km^2)', 
+#   'Indigenous Ratio', 'Minority Ratio', 'Immigrant Ratio', 
+#   'No Certification Ratio', 'LICO Ratio', 'Male Ratio', 'Female Ratio'
 ]
 
 # Now set the target variable to crime rate
