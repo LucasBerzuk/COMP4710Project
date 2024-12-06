@@ -249,12 +249,16 @@ trimmed_data['Crime Rate'] = trimmed_data['Count'].apply(categorize_crime_rate)
 # Set features, these are the 6 found that were the least correlated, if we want to add features back
 # they can be grabbed from 'all_computed_indicators' on line 87
 features = [
-    'No Certification Ratio',
-    'Employed Ratio', 
-    'Pop. Density (per km^2)', 
-    'Avg. Income', 
-    'Ownership Ratio', 
-    'Minority Ratio',
+    # 'No Certification Ratio',
+    # 'Employed Ratio', 
+    # 'Pop. Density (per km^2)', 
+    # 'Avg. Income', 
+    # 'Ownership Ratio', 
+    # 'Minority Ratio',
+    'High School Diploma Ratio', 'Post Secondary Ratio', 'Employed Ratio',
+  'Avg. Income', 'Household Income Ratio', 'Ownership Ratio', 'Pop. Density (per km^2)', 
+  'Indigenous Ratio', 'Minority Ratio', 'Immigrant Ratio', 
+  'No Certification Ratio', 'LICO Ratio', 'Male Ratio', 'Female Ratio'
 ]
 
 # Now set the target variable to crime rate
@@ -301,44 +305,45 @@ def evaluate_model(model, model_name, X_train, y_train, X_test, y_test):
     model_results[model_name] = report
 # -----------------------------------------------------------------
 
-# ---------------------------------RF------------------------------
-RF_model = RandomForestClassifier(random_state = RANDOM_STATE)
-evaluate_model(RF_model, "Random Forest", X_train, y_train, X_test, y_test)
-
 
 # -------------------------------MLP-NN----------------------------
 MLP_model = MLPClassifier(random_state = RANDOM_STATE,
                           hidden_layer_sizes = (1000,500))
 evaluate_model(MLP_model, "MLP Neural Network", X_train_scaled, y_train, X_test_scaled, y_test)
-
+MLP_pred = MLP_model.predict(X_test_scaled) # Generate this here for the plots
 
 # -------------------------------K-NN------------------------------
 KNN_model = KNeighborsClassifier(n_neighbors = 5,
                                  weights = "distance",
                                  algorithm = "brute")
 evaluate_model(KNN_model, "K-Nearest Neighbors", X_train, y_train, X_test, y_test)
-
+KNN_pred = KNN_model.predict(X_test) # Generate this here for the plots
 
 # --------------------------------DT--------------------------------
-dt_model = DecisionTreeClassifier(random_state = RANDOM_STATE)
-evaluate_model(dt_model, "Decision Tree", X_train, y_train, X_test, y_test)
-
+DT_model = DecisionTreeClassifier(random_state = RANDOM_STATE)
+evaluate_model(DT_model, "Decision Tree", X_train, y_train, X_test, y_test)
+DT_pred = DT_model.predict(X_test) # Generate this here for the plots
 
 # --------------------------------GBDT------------------------------
-gbdt_model = GradientBoostingClassifier(random_state = RANDOM_STATE)
-evaluate_model(gbdt_model, "Gradient Boosting", X_train, y_train, X_test, y_test)
+GBDT_model = GradientBoostingClassifier(random_state = RANDOM_STATE)
+evaluate_model(GBDT_model, "Gradient Boosting", X_train, y_train, X_test, y_test)
+GBDT_pred = GBDT_model.predict(X_test) # Generate this here for the plots
 
+# ---------------------------------RF------------------------------
+RF_model = RandomForestClassifier(random_state = RANDOM_STATE)
+evaluate_model(RF_model, "Random Forest", X_train, y_train, X_test, y_test)
+RF_pred = RF_model.predict(X_test) # Generate this here for the plots
 
 # ---------------------------------ET-------------------------------
-et_model = ExtraTreesClassifier(random_state = RANDOM_STATE)         
-evaluate_model(et_model, "Extra Trees", X_train, y_train, X_test, y_test)
-   
+ET_model = ExtraTreesClassifier(random_state = RANDOM_STATE)         
+evaluate_model(ET_model, "Extra Trees", X_train, y_train, X_test, y_test)
+ET_pred = ET_model.predict(X_test) # Generate this here for the plots
 
 # ---------------------------------SVC------------------------------
-svc_model = SVC(random_state = RANDOM_STATE,
+SVC_model = SVC(random_state = RANDOM_STATE,
                 C = 1000)
-evaluate_model(svc_model, "Support Vector Classifier", X_train_scaled, y_train, X_test_scaled, y_test)
-
+evaluate_model(SVC_model, "Support Vector Classifier", X_train_scaled, y_train, X_test_scaled, y_test)
+SVC_pred = SVC_model.predict(X_test_scaled) # Generate this here for the plots
 
 # ------------------------------- Results ---------------------------
 def process_report(report):
@@ -359,11 +364,19 @@ for model, df in formatted_results.items():
 
 
 
-# -----------------------EXPORTING TABLES IF NEEDED---------------------
+# # -----------------------EXPORTING TABLES IF NEEDED---------------------
 # import matplotlib.pyplot as plt
 
-# # Assuming `formatted_results` is created as in the previous example
+# # Assuming `formatted_results` is a dictionary of DataFrames with classification reports
 # for model, df in formatted_results.items():
+#     # Drop the 'support' column
+#     if "support" in df.columns:
+#         df = df.drop(columns=["support"])
+    
+#     # Drop 'weighted avg' and 'macro avg' rows if they exist
+#     df = df.drop(index=["weighted avg", "macro avg"], errors="ignore")
+    
+#     # Plotting
 #     fig, ax = plt.subplots(figsize=(10, 4))  # Adjust the figure size as needed
 #     ax.axis('tight')  # Turn off axes
 #     ax.axis('off')  # Turn off axes
@@ -389,25 +402,32 @@ for model, df in formatted_results.items():
 
 
 
-# # -----------------------------------------------
-# # PLOTTING
-# # -----------------------------------------------
-# import matplotlib.pyplot as plt
-# import seaborn as sns
-# from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-# from sklearn.decomposition import PCA
 
-# # Plot feature importance
-# def plot_feature_importance(model, feature_names):
-#     importance = model.feature_importances_
-#     sorted_idx = importance.argsort()
-#     plt.figure(figsize=(10, 6))
-#     plt.barh(range(len(sorted_idx)), importance[sorted_idx], align="center")
-#     plt.yticks(range(len(sorted_idx)), [feature_names[i] for i in sorted_idx])
-#     plt.title("Feature Importance")
-#     plt.show()
+# -----------------------------------------------
+# PLOTTING
+# -----------------------------------------------
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.decomposition import PCA
 
-# plot_feature_importance(et_model, features)
+# Plot feature importance
+def plot_feature_importance(model, feature_names):
+    importance = model.feature_importances_
+    sorted_idx = importance.argsort()
+    plt.figure(figsize=(10, 6))
+    plt.barh(range(len(sorted_idx)), importance[sorted_idx], align="center")
+    plt.yticks(range(len(sorted_idx)), [feature_names[i] for i in sorted_idx])
+    plt.title("Feature Importance")
+    plt.show()
+
+plot_feature_importance(MLP_model, features)
+plot_feature_importance(KNN_model, features)
+plot_feature_importance(DT_model, features)
+plot_feature_importance(GBDT_model, features)
+plot_feature_importance(RF_model, features)
+plot_feature_importance(ET_model, features)
+plot_feature_importance(SVC_model, features)
 
 # # Confusion Matrix
 # def plot_confusion_matrix(y_true, y_pred, labels):
@@ -417,7 +437,7 @@ for model, df in formatted_results.items():
 #     plt.title("Confusion Matrix")
 #     plt.show()
 
-# plot_confusion_matrix(y_test, et_pred, labels=RF_model.classes_)
+# plot_confusion_matrix(y_test, RF_pred, labels=RF_model.classes_)
 
 # # Visualizing Clusters with PCA
 # def plot_pca(X, y, title="PCA of Socioeconomic Features"):
@@ -457,5 +477,5 @@ for model, df in formatted_results.items():
 #     plt.show()
 
 # # Convert classification report to dict and plot
-# report_dict = classification_report(y_test, et_pred, output_dict=True, zero_division=0)
+# report_dict = classification_report(y_test, RF_pred, output_dict=True, zero_division=0)
 # plot_classification_report(report_dict)
