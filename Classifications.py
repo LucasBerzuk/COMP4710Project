@@ -421,13 +421,13 @@ def plot_feature_importance(model, feature_names):
     plt.title("Feature Importance")
     plt.show()
 
-plot_feature_importance(MLP_model, features)
-plot_feature_importance(KNN_model, features)
+# plot_feature_importance(MLP_model, features)
+# plot_feature_importance(KNN_model, features)
 plot_feature_importance(DT_model, features)
 plot_feature_importance(GBDT_model, features)
-plot_feature_importance(RF_model, features)
+# plot_feature_importance(RF_model, features)
 plot_feature_importance(ET_model, features)
-plot_feature_importance(SVC_model, features)
+# plot_feature_importance(SVC_model, features)
 
 # # Confusion Matrix
 # def plot_confusion_matrix(y_true, y_pred, labels):
