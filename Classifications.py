@@ -410,6 +410,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.decomposition import PCA
+from sklearn.metrics import roc_curve, roc_auc_score
+import shap
+import pandas as pd
+import numpy as np
 
 # Plot feature importance
 def plot_feature_importance(model, feature_names):
@@ -428,6 +432,95 @@ plot_feature_importance(GBDT_model, features)
 # plot_feature_importance(RF_model, features)
 plot_feature_importance(ET_model, features)
 # plot_feature_importance(SVC_model, features)
+
+# ET SHAP plot
+explainer = shap.TreeExplainer(ET_model)
+shap_values = np.array(explainer.shap_values(X_train))
+shap.summary_plot(shap_values[:,:,0],X_train)
+
+# DT SHAP plot
+explainer = shap.TreeExplainer(DT_model)
+shap_values = np.array(explainer.shap_values(X_train))
+shap.summary_plot(shap_values[:,:,0],X_train)
+
+# GBDT SHAP plot
+explainer = shap.TreeExplainer(GBDT_model)
+shap_values = np.array(explainer.shap_values(X_train))
+shap.summary_plot(shap_values,X_train)
+
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import roc_curve, roc_auc_score
+
+# Encode the labels
+label_encoder = LabelEncoder()
+y_test_encoded = label_encoder.fit_transform(y_test)  # 'Low' -> 0, 'High' -> 1
+
+# Get the predicted probabilities for the positive class
+et_probs = ET_model.predict_proba(X_test)[:, 1]
+dt_probs = DT_model.predict_proba(X_test)[:, 1]
+gbdt_probs = GBDT_model.predict_proba(X_test)[:, 1]
+
+# Calculate ROC curve and AUC for each model
+fpr_et, tpr_et, _ = roc_curve(y_test_encoded, et_probs)
+fpr_dt, tpr_dt, _ = roc_curve(y_test_encoded, dt_probs)
+fpr_gbdt, tpr_gbdt, _ = roc_curve(y_test_encoded, gbdt_probs)
+
+auc_et = roc_auc_score(y_test_encoded, et_probs)
+auc_dt = roc_auc_score(y_test_encoded, dt_probs)
+auc_gbdt = roc_auc_score(y_test_encoded, gbdt_probs)
+
+# Plot ROC curve
+plt.figure(figsize=(10, 8))
+
+# Plot each model's ROC curve
+plt.plot(fpr_et, tpr_et, label=f'ET Model (AUC = {auc_et:.2f})')
+plt.plot(fpr_dt, tpr_dt, label=f'DT Model (AUC = {auc_dt:.2f})')
+plt.plot(fpr_gbdt, tpr_gbdt, label=f'GBDT Model (AUC = {auc_gbdt:.2f})')
+
+# Plot the diagonal (no skill)
+plt.plot([0, 1], [0, 1], 'k--', label='Random Model (AUC = 0.50)')
+
+# Labels and title
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve Comparison')
+plt.legend(loc='lower right')
+
+# Show the plot
+plt.show()
+
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+from statsmodels.tools.tools import add_constant
+
+filtered_data = trimmed_data[features]
+
+# 1. Correlation Matrix
+plt.figure(figsize=(12, 10))
+correlation_matrix = filtered_data.corr()  # Compute the correlation matrix
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+plt.xticks(rotation=15, ha='right')
+plt.title('Correlation Heatmap')
+plt.show()
+
+# 2. VIF Analysis
+# Prepare data for VIF calculation
+X = trimmed_data[features]
+X = X.select_dtypes(include=[np.number])
+
+# Handle missing or infinite values
+X = X.replace([np.inf, -np.inf], np.nan)  # Replace infinite values with NaN
+X = X.dropna()  # Drop rows with NaN values
+
+# Verify all columns are numeric and finite
+assert np.isfinite(X.values).all(), "Data contains non-finite values!"
+
+# Calculate VIF
+vif_data = pd.DataFrame()
+vif_data["Feature"] = X.columns
+vif_data["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+
+# Print VIF
+print(vif_data)
 
 # # Confusion Matrix
 # def plot_confusion_matrix(y_true, y_pred, labels):
